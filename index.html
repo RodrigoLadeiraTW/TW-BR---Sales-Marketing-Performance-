@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Telcoweb — Dashboard Comercial</title>
+
+<style>
+:root{color-scheme:light;--primary:#0f2744;--accent:#0ea5e9;--bg:#f1f5f9;--card:#fff;--text:#0f172a;--sub:#64748b;--border:#e2e8f0;
+  --c-lead:#6366f1;--c-mql:#0ea5e9;--c-sql:#10b981;--c-opp:#f59e0b;--c-won:#22c55e}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* OVERLAY */
+.overlay{position:fixed;inset:0;background:rgba(15,39,68,.94);display:flex;align-items:center;justify-content:center;z-index:1000;overflow-y:auto;padding:20px}
+.modal{background:#fff;border-radius:16px;padding:32px;max-width:520px;width:100%;text-align:center}
+.modal-icon{font-size:2.6rem;margin-bottom:12px}
+.modal-title{font-size:1.15rem;font-weight:700;margin-bottom:6px}
+.modal-desc{color:var(--sub);font-size:.85rem;line-height:1.6;margin-bottom:18px}
+.modal-steps{background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:13px 15px;text-align:left;margin-bottom:18px;font-size:.78rem;line-height:1.9;color:var(--text)}
+.modal-steps strong{color:var(--primary)}
+.spinner{width:42px;height:42px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .75s linear infinite;margin:0 auto 14px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* FORM */
+.form-group{margin-bottom:13px;text-align:left}
+.form-label{display:block;font-size:.78rem;font-weight:600;margin-bottom:5px}
+.form-input{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:.87rem;transition:border .15s}
+.form-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px #0ea5e91a}
+.form-hint{font-size:.72rem;color:var(--sub);margin-top:3px}
+.err-msg{background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:9px 13px;color:#991b1b;font-size:.81rem;margin-bottom:11px;display:none}
+
+/* BUTTONS */
+.btn{padding:8px 16px;border:none;border-radius:7px;cursor:pointer;font-size:.83rem;font-weight:500;transition:all .15s}
+.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:#0284c7}
+.btn-outline{background:#fff;color:var(--sub);border:1px solid var(--border)}.btn-outline:hover{border-color:var(--accent);color:var(--accent)}
+.btn-ghost{background:rgba(255,255,255,.13);color:#fff;border:1px solid rgba(255,255,255,.2)}.btn-ghost:hover{background:rgba(255,255,255,.22)}
+.btn-sm{padding:5px 11px;font-size:.75rem}
+.btn-seg{padding:5px 13px;border:1px solid var(--border);border-radius:20px;background:#fff;color:var(--sub);cursor:pointer;font-size:.77rem;transition:all .15s}
+.btn-seg.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.btn-seg:hover:not(.active){border-color:var(--accent);color:var(--accent)}
+
+/* HEADER */
+.header{background:var(--primary);color:#fff;padding:13px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px #0004}
+.logo{font-size:1.12rem;font-weight:800;letter-spacing:-.5px}.logo span{color:var(--accent)}
+.header-sub{font-size:.7rem;opacity:.62;margin-top:2px}
+.header-right{display:flex;gap:7px;align-items:center}
+
+/* PERIOD BAR */
+.period-bar{background:#fff;border-bottom:1px solid var(--border);padding:8px 24px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.period-label{font-size:.74rem;color:var(--sub);margin-right:2px}
+.last-upd{margin-left:auto;font-size:.71rem;color:var(--sub)}
+.period-bar select.spec-active{border-color:var(--primary)!important;color:var(--primary)!important;font-weight:600}
+
+/* MAIN */
+.main{padding:20px;max-width:1400px;margin:0 auto}
+.err-banner{background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:9px 13px;color:#991b1b;font-size:.83rem;margin-bottom:14px;display:none}
+.demo-badge{background:#fef3c7;border:1px solid #fde68a;border-radius:6px;padding:7px 13px;color:#92400e;font-size:.8rem;margin-bottom:14px;display:none}
+
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:15px;margin-bottom:18px}
+@media(max-width:1200px){.kpi-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:650px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+.kpi-card{background:#fff;border-radius:10px;padding:15px 17px;box-shadow:0 1px 3px #0002;border:1px solid var(--border);border-top:3px solid transparent}
+.kpi-card.kpi-lead{border-top-color:var(--c-lead)}
+.kpi-card.kpi-mql{border-top-color:var(--c-mql)}
+.kpi-card.kpi-sql{border-top-color:var(--c-sql)}
+.kpi-card.kpi-opp{border-top-color:var(--c-opp)}
+.kpi-card.kpi-won{border-top-color:var(--c-won)}
+.kpi-card.kpi-conv{border-top-color:var(--primary)}
+.kpi-card.kpi-cycle{border-top-color:#8b5cf6}
+.kpi-val-sm{font-size:1.15rem;font-weight:700;line-height:1.2}
+.kpi-lbl{font-size:.68rem;color:var(--sub);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px}
+.kpi-val{font-size:1.6rem;font-weight:700;line-height:1.1}
+.kpi-sub{font-size:.7rem;color:var(--sub);margin-top:4px}
+
+/* CARDS */
+.card{background:#fff;border-radius:10px;padding:18px;box-shadow:0 1px 3px #0002;border:1px solid var(--border)}
+.card-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
+.card-title{font-size:.87rem;font-weight:600}
+.card-sub{font-size:.71rem;color:var(--sub);margin-top:2px}
+.row1{margin-bottom:15px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:15px}
+.row3{margin-bottom:15px}
+@media(max-width:1100px){.row2{grid-template-columns:1fr 1fr}}
+@media(max-width:650px){.row2{grid-template-columns:1fr}}
+
+/* FUNNEL */
+.funnel-wrap{padding:4px 0}
+.funnel-row{margin-bottom:2px}
+.funnel-stage{display:flex;align-items:center;gap:12px}
+.funnel-lbl{min-width:115px;font-size:.8rem;font-weight:600;display:flex;align-items:center;gap:7px}
+.funnel-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.funnel-bar-track{flex:1;background:#f1f5f9;border-radius:4px;height:34px;position:relative;overflow:hidden}
+.funnel-bar-fill{height:100%;border-radius:4px;transition:width .5s cubic-bezier(.4,0,.2,1);display:flex;align-items:center;justify-content:flex-end;padding-right:10px}
+.funnel-bar-num{font-size:.8rem;font-weight:700;color:#fff;white-space:nowrap}
+.funnel-bar-val{font-size:.7rem;color:#fff;opacity:.85;margin-left:6px;white-space:nowrap}
+.funnel-right{min-width:80px;text-align:right}
+.funnel-pct-total{font-size:.74rem;color:var(--sub)}
+.funnel-conv{display:flex;align-items:center;gap:8px;padding:3px 0 3px 122px}
+.funnel-conv-line{width:1px;height:18px;background:var(--border);margin-left:4px}
+.funnel-conv-badge{background:#f1f5f9;border:1px solid var(--border);border-radius:20px;padding:2px 10px;font-size:.72rem;color:var(--sub);display:flex;align-items:center;gap:4px}
+.conv-arrow{color:var(--accent);font-weight:700}
+
+/* VIEW TOGGLE */
+.view-toggle{display:flex;gap:5px}
+.vtog{padding:4px 10px;border:1px solid var(--border);border-radius:5px;background:#fff;color:var(--sub);cursor:pointer;font-size:.74rem;transition:all .15s}
+.vtog.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+
+/* SQL TABLE */
+.sql-table{width:100%;border-collapse:collapse;font-size:.82rem}
+.sql-table th{padding:7px 9px;font-size:.67rem;text-transform:uppercase;letter-spacing:.4px;color:var(--sub);border-bottom:2px solid var(--border);text-align:left}
+.sql-table th:not(:first-child){text-align:right}
+.sql-table td{padding:9px 9px;border-bottom:1px solid var(--border)}
+.sql-table td:not(:first-child){text-align:right}
+.sql-table tr:last-child td{border-bottom:none}
+.sql-table tr:hover td{background:#f8fafc}
+.rank{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;font-size:.67rem;font-weight:700;margin-right:7px}
+.r1{background:#fef3c7;color:#92400e}.r2{background:#f1f5f9;color:#475569}.r3{background:#fde8d8;color:#9a3412}.rn{background:#f1f5f9;color:#94a3b8}
+.sql-vendor-cell{display:flex;align-items:center;flex-direction:column;align-items:flex-start}
+
+/* SOURCE TABLE */
+.src-table-wrap{overflow-x:auto}
+.src-table{width:100%;border-collapse:collapse;font-size:.8rem;min-width:600px}
+.src-table th{padding:7px 10px;font-size:.65rem;text-transform:uppercase;letter-spacing:.4px;color:var(--sub);border-bottom:2px solid var(--border);text-align:right;white-space:nowrap}
+.src-table th:first-child{text-align:left}
+.src-table td{padding:8px 10px;border-bottom:1px solid var(--border);text-align:right}
+.src-table td:first-child{text-align:left;font-weight:500}
+.src-table tr:last-child td{border-bottom:none;font-weight:700;background:#f8fafc}
+.src-table tr:hover td{background:#f8fafc}
+.src-table tr:last-child:hover td{background:#f1f5f9}
+.stage-pill{display:inline-block;padding:1px 7px;border-radius:10px;font-size:.65rem;font-weight:600;color:#fff}
+.pill-lead{background:var(--c-lead)}.pill-mql{background:var(--c-mql)}.pill-sql{background:var(--c-sql)}.pill-opp{background:var(--c-opp)}.pill-won{background:var(--c-won)}
+.src-mini-bar{width:100%;height:3px;background:var(--border);border-radius:2px;margin-top:3px}
+.src-mini-fill{height:100%;border-radius:2px;background:var(--accent)}
+/* Negócios Convertidos */
+.cv-grp{padding:5px 11px;border:none;background:transparent;color:var(--sub);cursor:pointer;font-size:.75rem;transition:all .15s;white-space:nowrap}
+.cv-grp.active{background:var(--primary);color:#fff}
+.cv-grp:hover:not(.active){background:#f1f5f9}
+.cv-month-hdr{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:#f8fafc;border:1px solid var(--border);border-radius:8px;margin-bottom:4px;cursor:pointer;user-select:none}
+.cv-month-hdr:hover{background:#f1f5f9}
+.cv-month-label{font-size:.84rem;font-weight:700;color:var(--primary);text-transform:capitalize}
+.cv-month-meta{display:flex;gap:14px;align-items:center}
+.cv-month-badge{font-size:.74rem;color:var(--sub)}
+.cv-month-val{font-size:.84rem;font-weight:700;color:var(--c-won)}
+.cv-month-arrow{font-size:.75rem;color:var(--sub);transition:transform .2s}
+.cv-month-body{margin-bottom:12px;overflow:hidden}
+.cycle-pill{display:inline-block;padding:1px 7px;border-radius:10px;font-size:.72rem;font-weight:600}
+.cycle-fast{background:#dcfce7;color:#166534}
+.cycle-mid{background:#fef9c3;color:#854d0e}
+.cycle-slow{background:#fee2e2;color:#991b1b}
+
+/* STAGE MAPPING MODAL */
+.map-modal{max-width:560px}
+.map-row{display:grid;grid-template-columns:130px 1fr;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.map-row:last-child{border-bottom:none}
+.map-stage-lbl{display:flex;align-items:center;gap:8px;font-size:.83rem;font-weight:600}
+.map-stage-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.map-select{width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:7px;font-size:.83rem;background:#fff}
+.map-select:focus{outline:none;border-color:var(--accent)}
+.map-hint{font-size:.73rem;color:var(--sub);margin-top:3px}
+.map-note{background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 13px;font-size:.78rem;color:#1e40af;margin-bottom:14px;text-align:left}
+
+/* EMPTY */
+.empty{text-align:center;padding:30px;color:var(--sub);font-size:.85rem}
+.sql-table{width:100%;border-collapse:collapse;font-size:.78rem}
+.sql-table thead th{padding:6px 10px;text-align:left;font-weight:600;font-size:.7rem;text-transform:uppercase;letter-spacing:.04em;color:var(--sub);border-bottom:1px solid var(--border);white-space:nowrap}
+.sql-table tbody tr{border-bottom:1px solid var(--border);transition:background .15s}
+.sql-table tbody tr:last-child{border-bottom:none}
+.sql-table tbody tr:hover{background:var(--hover,rgba(255,255,255,.04))}
+.sql-table td{padding:7px 10px;vertical-align:middle}
+.sql-table td.col-titulo{font-weight:500;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sql-table td.col-resp{color:var(--sub);white-space:nowrap}
+.sql-table td.col-val{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.sql-table td.col-status{text-align:center}
+.sbadge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:.68rem;font-weight:600;letter-spacing:.03em}
+.sbadge-ativo{background:rgba(74,222,128,.15);color:#4ade80}
+.sbadge-perdido{background:rgba(248,113,113,.13);color:#f87171}
+.sbadge-ganho{background:rgba(34,197,94,.15);color:#16a34a}
+.sbadge-opp{background:rgba(168,85,247,.13);color:#a855f7}
+.empty-icon{font-size:1.8rem;margin-bottom:7px}
+
+/* CSV DROP ZONE */
+.drop-zone{border:2px dashed var(--border);border-radius:10px;padding:32px 20px;text-align:center;cursor:pointer;transition:all .2s;background:#fafafa}
+.drop-zone:hover,.drop-zone.drag-over{border-color:var(--accent);background:#eff6ff}
+.drop-zone-icon{font-size:2.4rem;margin-bottom:10px}
+.drop-zone-label{font-size:.88rem;color:var(--sub);margin-bottom:8px}
+.csv-step{display:none}.csv-step.active{display:block}
+.csv-check-list{max-height:180px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:6px 10px;text-align:left;margin-bottom:10px}
+.csv-check-item{display:flex;align-items:center;gap:8px;padding:5px 2px;font-size:.82rem;cursor:pointer;border-bottom:1px solid var(--border)}
+.csv-check-item:last-child{border-bottom:none}
+.step-indicator{display:flex;justify-content:center;gap:6px;margin-bottom:18px}
+.step-dot{width:8px;height:8px;border-radius:50%;background:var(--border)}
+.step-dot.active{background:var(--accent)}
+/* ── GitHub Pages modal ── */
+#mGitHub .modal{max-width:500px}
+.gh-field{margin-bottom:14px}
+.gh-field label{display:block;font-size:.78rem;font-weight:600;color:var(--text);margin-bottom:4px}
+.gh-field input{width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:.83rem;color:var(--text);background:var(--bg);outline:none}
+.gh-field input:focus{border-color:var(--accent)}
+.gh-field .gh-hint{font-size:.72rem;color:var(--sub);margin-top:3px}
+.gh-steps{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin:10px 0 14px;font-size:.77rem;color:var(--text);line-height:1.7}
+.gh-steps ol{margin:4px 0 0 16px;padding:0}
+.gh-url-box{display:none;margin-top:10px;padding:10px 14px;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;font-size:.79rem;color:#166534;word-break:break-all}
+.gh-url-box a{color:#15803d;font-weight:600}
+</style>
+</head>
+<body><div style="position:sticky;top:0;z-index:9999;background:#1e293b;color:#94a3b8;font-size:.75rem;padding:10px 20px;display:flex;align-items:center;gap:12px;border-bottom:2px solid #334155;flex-wrap:wrap"><span style="background:#f59e0b;color:#1c1917;font-size:.65rem;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:.5px;white-space:nowrap">SOMENTE LEITURA</span><span style="font-weight:600;color:#e2e8f0">Dashboard Comercial · Telcoweb Brasil</span><span style="margin-left:auto;opacity:.85;white-space:nowrap">📅 <strong style="color:#f8fafc">terça-feira, 14 de julho de 2026 às 18:01</strong></span></div>
+
+<!-- CONFIG MODAL -->
+
+
+<!-- GITHUB PAGES MODAL -->
+
+
+<!-- CSV IMPORT MODAL -->
+
+
+<!-- STAGE MAPPING MODAL -->
+
+
+<!-- LOADING MODAL -->
+<div id="mLoad" class="overlay" style="display: flex;">
+<div class="modal" style="max-width:600px">
+  <div class="spinner"></div>
+  <div class="modal-title">Carregando dados...</div>
+  <div id="loadMsg" class="modal-desc">Carregando crm.stagehistory.list... (24)</div>
+  <div id="logBox" style="background:#0f172a;border-radius:8px;padding:12px 14px;text-align:left;max-height:220px;overflow-y:auto;font-family:monospace;font-size:.72rem;line-height:1.7;color:#94a3b8;margin-top:10px"><div style="color:#94a3b8">[18:00:46] → Webhook: https://telcoweb.bitrix24.com.br/rest/35/30f807jiqnqgt28i/</div><div style="color:#94a3b8">[18:00:46] → Iniciando conexão com Bitrix24...</div><div style="color:#94a3b8">[18:00:47] → Chamando crm.status.list (STATUS)...</div><div style="color:#4ade80">[18:00:47] ✓ Etapas de Leads OK — 16: Novos, Tentativa de contato, Em contato, Lead convertido, Desistencia, Tentativa de contato esgotada, Contato Futuro, Dados Incorretos, Não atendeu as necessidades, Não tem perfil, Sem interesse, Fechou com Operadora, Fechou com a concorrencia, Preço, Lead duplicado, Duplicado</div><div style="color:#94a3b8">[18:00:47] → Chamando crm.status.list (DEAL_STAGE)...</div><div style="color:#4ade80">[18:00:48] ✓ Etapas de Negócios OK — 16: Prospect, Marketing Qualified Leads, Sales Qualified Leads, Oportunidades, Negócios Fechados, Desistencia, Tentativa de contato esgotada, Contato Futuro, Dados Incorretos, Contato futuro, Não tem perfil, Não atendeu as necessidades, Sem interesse, Fechou com Operadora, Fechou com a concorrencia, Preço</div><div style="color:#94a3b8">[18:00:48] → Chamando crm.status.list (SOURCE)...</div><div style="color:#4ade80">[18:00:48] ✓ crm.status.list (SOURCE) OK — 13 origens</div><div style="color:#94a3b8">[18:00:49] → Chamando user.get...</div><div style="color:#4ade80">[18:00:49] ✓ user.get OK — 15 usuários</div><div style="color:#94a3b8">[18:00:49] → Chamando crm.deal.fields...</div><div style="color:#4ade80">[18:00:49] ✓ Campos obtidos: 100 rótulos, 52 campos UF_ | Segmento: UF_CRM_6927539C2AE55</div><div style="color:#fbbf24">[18:00:50] ⚠ Campo Segmento não encontrado em crm.lead.fields</div><div style="color:#94a3b8">[18:00:50] → Chamando crm.lead.list...</div><div style="color:#fbbf24">[18:00:55] ⚠ Filtro Brasil (leads): 91 leads de outros países excluídos via UTM</div><div style="color:#4ade80">[18:00:55] ✓ crm.lead.list OK — 850 total · 759 Brasil</div><div style="color:#4ade80">[18:00:55] ✓ Campo Segmento em leads detectado por dados: UF_CRM_1758721912169 — ex: {"platform":"ig","leadgenId":"1286204353316847","formId":"675097685371285","isOrganic":false,"adId":"120236982846910784","adName":"BY -  CTO , sua operação conseguiria continuar  - DARKPOST - CADASTRE-SE","adsetId":"120236982483300784","adsetName":"BY - FEED REELS STORIES - BRASIL - CONTINUA - INTERESSES EM ESTRUTURA DE REDE E GRANDES EMPRESAS","campaignId":"120236982483060784","campaignName":"BY - [TELCOWEB] - CAMPANHA DO BRASIL - [LEADS] - CONTÍNUA - INSTAGRAM","dateCreated":"2026-01-17T23:00:15.000Z","data":{"qual_é_o_seu_cargo?_":["outro"],"qual_o_segmento_de_sua_empresa?":"Engenharia, prestavaonde serviços","sua_empresa_já_utiliza_alguma_solução_para_balanceamento_ou_redundância_de_links?_se_sim,_consegue_descrever?":"Não","full_name":"Guilherme Campos","phone_number":"+5567984044114","work_email":"telecomunicacao@gmail.com","nome_da_empresa":"Supernova engenharia"},"mappable_field_data":[{"name":"qual_é_o_seu_cargo?_","value":"outro"},{"name":"qual_o_segmento_de_sua_empresa?","value":"Engenharia, prestavaonde serviços"},{"name":"sua_empresa_já_utiliza_alguma_solução_para_balanceamento_ou_redundância_de_links?_se_sim,_consegue_descrever?","value":"Não"},{"name":"full_name","value":"Guilherme Campos"},{"name":"phone_number","value":"+5567984044114"},{"name":"work_email","value":"telecomunicacao@gmail.com"},{"name":"nome_da_empresa","value":"Supernova engenharia"}],"pageId":"805439392659659","adgroupId":"120236982846910784"}, {"platform":"ig","leadgenId":"1910130953046820","formId":"675097685371285","isOrganic":false,"adId":"120236982846910784","adName":"BY -  CTO , sua operação conseguiria continuar  - DARKPOST - CADASTRE-SE","adsetId":"120236982483300784","adsetName":"BY - FEED REELS STORIES - BRASIL - CONTINUA - INTERESSES EM ESTRUTURA DE REDE E GRANDES EMPRESAS","campaignId":"120236982483060784","campaignName":"BY - [TELCOWEB] - CAMPANHA DO BRASIL - [LEADS] - CONTÍNUA - INSTAGRAM","dateCreated":"2026-01-18T00:05:48.000Z","data":{"qual_é_o_seu_cargo?_":["gerente_de_ti_/_infraestrutura"],"qual_o_segmento_de_sua_empresa?":"Revenda e prestação de serviço de TI","sua_empresa_já_utiliza_alguma_solução_para_balanceamento_ou_redundância_de_links?_se_sim,_consegue_descrever?":"Mikrotik","full_name":"Artur Henrique Batista Correia","phone_number":"086988074804","work_email":"contato@technoextreme.com.br","nome_da_empresa":"Techno Extreme"},"mappable_field_data":[{"name":"qual_é_o_seu_cargo?_","value":"gerente_de_ti_/_infraestrutura"},{"name":"qual_o_segmento_de_sua_empresa?","value":"Revenda e prestação de serviço de TI"},{"name":"sua_empresa_já_utiliza_alguma_solução_para_balanceamento_ou_redundância_de_links?_se_sim,_consegue_descrever?","value":"Mikrotik"},{"name":"full_name","value":"Artur Henrique Batista Correia"},{"name":"phone_number","value":"086988074804"},{"name":"work_email","value":"contato@technoextreme.com.br"},{"name":"nome_da_empresa","value":"Techno Extreme"}],"pageId":"805439392659659","adgroupId":"120236982846910784"}, {"platform":"ig","leadgenId":"3236452953196202","formId":"675097685371285","isOrganic":false,"adId":"120236982483410784","adName":"BY -  CTO , sua operação conseguiria continuar  - DARKPOST - CADASTRE-SE","adsetId":"120236982483180784","adsetName":"BY - FEED REELS STORIES - BRASIL - CONTINUA - LOOKALIKE","campaignId":"120236982483060784","campaignName":"BY - [TELCOWEB] - CAMPANHA DO BRASIL - [LEADS] - CONTÍNUA - INSTAGRAM","dateCreated":"2026-01-19T13:01:02.000Z","data":{"qual_é_o_seu_cargo?_":["gerente_de_ti_/_infraestrutura"],"qual_o_segmento_de_sua_empresa?":"Serviços","sua_empresa_já_utiliza_alguma_solução_para_balanceamento_ou_redundância_de_links?_se_sim,_consegue_descrever?":"Não","full_name":"Johnson Matos","phone_number":"+5575999642036","work_email":"geataodeti@emflors.com","nome_da_empresa":"Emflors - Empreendimentos Florestais Ltda."},"mappable_field_data":[{"name":"qual_é_o_seu_cargo?_","value":"gerente_de_ti_/_infraestrutura"},{"name":"qual_o_segmento_de_sua_empresa?","value":"Serviços"},{"name":"sua_empresa_já_utiliza_alguma_solução_para_balanceamento_ou_redundância_de_links?_se_sim,_consegue_descrever?","value":"Não"},{"name":"full_name","value":"Johnson Matos"},{"name":"phone_number","value":"+5575999642036"},{"name":"work_email","value":"geataodeti@emflors.com"},{"name":"nome_da_empresa","value":"Emflors - Empreendimentos Florestais Ltda."}],"pageId":"805439392659659","adgroupId":"120236982483410784"}</div><div style="color:#94a3b8">[18:00:55] → Chamando crm.deal.list...</div><div style="color:#fbbf24">[18:00:58] ⚠ Filtro Brasil: 55 negócios de outros países excluídos (CATEGORY_ID≠0)</div><div style="color:#4ade80">[18:00:58] ✓ crm.deal.list OK — 513 negócios · 402 perdidos</div><div style="color:#fbbf24">[18:00:58] ⚠   Pipeline CATEGORY_ID=0: 366 perdidos</div><div style="color:#fbbf24">[18:00:58] ⚠   Pipeline CATEGORY_ID=11: 36 perdidos</div><div style="color:#4ade80">[18:00:58] ✓ Etapas com registros: "Tentativa de contato esgotada"(366), "Contato Futuro"(22), "Dados Incorretos"(66), "Não atendeu as necessidades"(27), "Não tem perfil"(100), "Sem interesse"(82), "Fechou com Operadora"(2), "Fechou com a concorrencia"(5), "Preço"(27), "Lead duplicado"(13), "Duplicado"(14), "Lead convertido"(121), "Em contato"(1), "Desistencia"(3), "Novos"(21), "Tentativa de contato"(22), "Negócios Fechados"(34), "Oportunidades"(6), "Contato Futuro"(30), "Sales Qualified Leads"(23), "Desistencia"(216), "Marketing Qualified Leads"(16)</div><div style="color:#4ade80">[18:00:58] ✓ leadDateMap: 759 leads por ID, 725 por título (usados como Data Início quando lead não foi deletado)</div><div style="color:#4ade80">[18:00:58] ✓ leadSegmentoMap: 356 leads com segmento</div><div style="color:#4ade80">[18:00:58] ✓ Total: 1217 registros (leads+deals), 51 etapas, 15 usuários</div><div style="color:#94a3b8">[18:00:59] → Chamando crm.stagehistory.list...</div><div style="color:#4ade80">[18:01:04] ✓ crm.stagehistory.list OK — 25 registros de mudança de etapa</div><div style="color:#4ade80">[18:01:04] ✓ Histórico SQL: 0 deals com entrada SQL registrada</div><div style="color:#4ade80">[18:01:04] ✓ SQL datemap total (histórico + cache + MOVED_TIME): 24 deals</div><div style="color:#4ade80">[18:01:04] ✓ SQL convertidos mês atual (data exata entrada SQL): 1</div><div style="color:#4ade80">[18:01:04] ✓ SQL convertidos mês anterior: 14</div><div style="color:#4ade80">[18:01:04] ✓ SQL whitelist (prev): JUINAINFO INFORMÁTICA - Junior Carlos Ro</div><div style="color:#4ade80">[18:01:04] ✓ Perdidos SQL whitelist: atual=0 prev=1</div><div style="color:#4ade80">[18:01:04] ✓ MQL datemap (atual+cache+proxy SQL): 30 deals</div></div>
+  <div style="display:flex;gap:8px;margin-top:10px;justify-content:center">
+    <button id="btnConfirm" class="btn btn-primary" style="display: none;" onclick="confirmStep()">▶ Continuar →</button>
+    <button class="btn btn-outline btn-sm" onclick="document.getElementById('logBox').innerHTML=''">Limpar log</button>
+  </div>
+</div>
+</div>
+
+<!-- HEADER -->
+<div class="header">
+  <div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <img src="data:image/png;base64,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" alt="telcoweb" style="height:34px;display:block">
+      <div class="header-sub" style="margin-top:3px">Dashboard Comercial Brasil · Fonte: Bitrix24</div>
+    </div>
+  </div>
+  
+</div>
+
+<!-- PERIOD BAR -->
+
+
+<!-- MAIN -->
+<div class="main">
+  <div id="errBanner" class="err-banner" style="display: none;"></div>
+  <div id="demoBadge" class="demo-badge" style="display: none;">⚠️ Modo demonstração — dados fictícios para visualização do layout. Conecte o Bitrix24 via ⚙ Webhook para dados reais.</div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi-card" style="border-top:3px solid #60a5fa">
+      <div class="kpi-lbl">Total de Leads</div>
+      <div class="kpi-val" id="kTotalLeads">759</div>
+      <div class="kpi-sub" id="kTotalLeadsSub">leads gerados · histórico completo</div>
+    </div>
+    <div class="kpi-card kpi-lead">
+      <div class="kpi-lbl">Negócios Ativos</div>
+      <div class="kpi-val" id="kLead">32</div>
+      <div class="kpi-sub">Total em todas as etapas</div>
+    </div>
+    <div class="kpi-card kpi-mql">
+      <div class="kpi-lbl">Neg. Perdidos</div>
+      <div class="kpi-val" id="kLost">7</div>
+      <div class="kpi-sub">Qualificados mktg</div>
+    </div>
+    <div class="kpi-card kpi-won">
+      <div class="kpi-lbl">Fechados (período)</div>
+      <div class="kpi-val" id="kWon">0</div>
+      <div class="kpi-sub" id="kWonSub">R$ 0 ganhos</div>
+    </div>
+    <div class="kpi-card kpi-conv">
+      <div class="kpi-lbl">Conv. Lead → Fechado</div>
+      <div class="kpi-val" id="kConv">0%</div>
+      <div class="kpi-sub">Taxa de conversão total</div>
+    </div>
+    <div class="kpi-card kpi-cycle">
+      <div class="kpi-lbl">Ciclo de Vendas</div>
+      <div class="kpi-val kpi-val-sm" id="kCycle">—</div>
+      <div class="kpi-sub" id="kCycleSub">Sem fechamentos no período</div>
+    </div>
+  </div>
+
+  <!-- FUNIL -->
+  <div class="card row1">
+    <div class="card-hdr">
+      <div>
+        <div class="card-title">Funil Comercial</div>
+        <div class="card-sub">Pipeline ativo por estágio · Fechados = ganhos no período selecionado</div>
+      </div>
+    </div>
+    <div id="funnelWrap" class="funnel-wrap"><div class="funnel-row">
+      <div class="funnel-stage">
+        <div class="funnel-lbl"><div class="funnel-dot" style="background:var(--c-lead)"></div>Lead</div>
+        <div class="funnel-bar-track">
+          <div class="funnel-bar-fill" style="width:100%;background:var(--c-lead)">
+            <span class="funnel-bar-num">30</span>
+            
+          </div>
+        </div>
+      </div></div><div class="funnel-row">
+      <div class="funnel-stage">
+        <div class="funnel-lbl"><div class="funnel-dot" style="background:var(--c-mql)"></div>MQL</div>
+        <div class="funnel-bar-track">
+          <div class="funnel-bar-fill" style="width:3%;background:var(--c-mql)">
+            <span class="funnel-bar-num">1</span>
+            
+          </div>
+        </div>
+      </div></div><div class="funnel-row">
+      <div class="funnel-stage">
+        <div class="funnel-lbl"><div class="funnel-dot" style="background:var(--c-sql)"></div>SQL</div>
+        <div class="funnel-bar-track">
+          <div class="funnel-bar-fill" style="width:3%;background:var(--c-sql)">
+            <span class="funnel-bar-num">1</span>
+            
+          </div>
+        </div>
+      </div></div><div class="funnel-row">
+      <div class="funnel-stage">
+        <div class="funnel-lbl"><div class="funnel-dot" style="background:var(--c-opp)"></div>Oportunidade</div>
+        <div class="funnel-bar-track">
+          <div class="funnel-bar-fill" style="width:3%;background:var(--c-opp)">
+            <span class="funnel-bar-num">0</span>
+            
+          </div>
+        </div>
+      </div></div><div class="funnel-row">
+      <div class="funnel-stage">
+        <div class="funnel-lbl"><div class="funnel-dot" style="background:var(--c-won)"></div>Fechados</div>
+        <div class="funnel-bar-track">
+          <div class="funnel-bar-fill" style="width:3%;background:var(--c-won)">
+            <span class="funnel-bar-num">0</span>
+            
+          </div>
+        </div>
+      </div></div></div>
+  </div>
+
+  <!-- FONTE LEADS + FONTE ATIVOS + FONTE FECHADOS -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px;margin-bottom:15px">
+    <div class="card">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Fonte dos Leads Gerados</div>
+          <div class="card-sub">Origem de todos os leads · período selecionado</div>
+        </div>
+        <div id="leadSrcCount" style="font-size:.75rem;font-weight:600;color:var(--accent)">30 leads</div>
+      </div>
+      <div id="leadSrcWrap" style="padding-top:6px"><div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px">
+        <span style="font-size:.79rem;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%;color:var(--text)">Instagram</span>
+        <span style="font-size:.75rem;color:var(--sub);flex-shrink:0;margin-left:6px">30 neg · <strong style="color:var(--text)">100%</strong></span>
+      </div>
+      <div style="background:#f1f5f9;border-radius:4px;height:7px;width:100%">
+        <div style="width:100%;height:100%;border-radius:4px;background:#6366f1;transition:width .4s"></div>
+      </div>
+    </div></div>
+    </div>
+    <div class="card">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Fonte dos Negócios Ativos</div>
+          <div class="card-sub">Todos os negócios ativos no período</div>
+        </div>
+        <div id="activeSrcCount" style="font-size:.75rem;font-weight:600;color:var(--accent)">17 negócios</div>
+      </div>
+      <canvas id="cSource" style="display:none"></canvas>
+      <div id="srcDonut" style="padding-top:6px"><div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px">
+        <span style="font-size:.79rem;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%;color:var(--text)">Instagram</span>
+        <span style="font-size:.75rem;color:var(--sub);flex-shrink:0;margin-left:6px">17 neg · <strong style="color:var(--text)">100%</strong></span>
+      </div>
+      <div style="background:#f1f5f9;border-radius:4px;height:7px;width:100%">
+        <div style="width:100%;height:100%;border-radius:4px;background:#6366f1;transition:width .4s"></div>
+      </div>
+    </div></div>
+    </div>
+    <div class="card">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Fonte dos Negócios Fechados</div>
+          <div class="card-sub">Origem dos negócios ganhos no período</div>
+        </div>
+        <div id="wonSrcCount" style="font-size:.75rem;font-weight:600;color:var(--accent)"></div>
+      </div>
+      <canvas id="cWonSource" style="display:none"></canvas>
+      <div id="wonSrcDonut" style="padding-top:6px"><div class="empty"><div class="empty-icon">🏆</div>Sem negócios fechados no período.</div></div>
+    </div>
+  </div>
+
+  <!-- FECHADOS POR SEGMENTO -->
+  <div class="card row3" style="margin-bottom:15px">
+    <div class="card-hdr">
+      <div>
+        <div class="card-title">Concentração de Clientes por Segmento</div>
+        <div class="card-sub">Clientes únicos por segmento · período selecionado</div>
+      </div>
+      <div id="wonSegCount" style="font-size:.75rem;color:var(--sub)"></div>
+    </div>
+    <div id="wonSegBars" style="padding-top:4px"><div class="empty"><div class="empty-icon">🏆</div>Sem negócios fechados no período.</div></div>
+  </div>
+
+  <!-- RAZÃO DE PERDA -->
+  <div class="card row3" style="margin-bottom:15px">
+    <div class="card-hdr">
+      <div>
+        <div class="card-title">Razão de Perda</div>
+        <div class="card-sub">Negócios perdidos por motivo · Pipeline Brasil</div>
+      </div>
+      <div id="lostReasonCount" style="font-size:.75rem;color:var(--sub)">7 negócios perdidos</div>
+    </div>
+    <div id="lostReasonBars" style="padding-top:4px"><div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px">
+        <span style="font-size:.79rem;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%;color:var(--text)">Não tem perfil</span>
+        <span style="font-size:.75rem;color:var(--sub);flex-shrink:0;margin-left:6px">5 neg · <strong style="color:var(--text)">71%</strong></span>
+      </div>
+      <div style="background:#f1f5f9;border-radius:4px;height:7px;width:100%">
+        <div style="width:100%;height:100%;border-radius:4px;background:#ef4444;transition:width .4s"></div>
+      </div>
+    </div><div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px">
+        <span style="font-size:.79rem;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%;color:var(--text)">Não atendeu as necessidades</span>
+        <span style="font-size:.75rem;color:var(--sub);flex-shrink:0;margin-left:6px">1 neg · <strong style="color:var(--text)">14%</strong></span>
+      </div>
+      <div style="background:#f1f5f9;border-radius:4px;height:7px;width:100%">
+        <div style="width:20%;height:100%;border-radius:4px;background:#f97316;transition:width .4s"></div>
+      </div>
+    </div><div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px">
+        <span style="font-size:.79rem;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%;color:var(--text)">Fechou com a concorrencia</span>
+        <span style="font-size:.75rem;color:var(--sub);flex-shrink:0;margin-left:6px">1 neg · <strong style="color:var(--text)">14%</strong></span>
+      </div>
+      <div style="background:#f1f5f9;border-radius:4px;height:7px;width:100%">
+        <div style="width:20%;height:100%;border-radius:4px;background:#f59e0b;transition:width .4s"></div>
+      </div>
+    </div></div>
+  </div>
+
+
+
+  <!-- SQL CONVERTIDOS POR MÊS -->
+  <div class="card row3" style="margin-bottom:15px">
+    <div class="card-hdr">
+      <div>
+        <div class="card-title" id="sqlCardTitle">SQL Convertidos · Mês Atual</div>
+        <div class="card-sub" id="sqlMonthSub">Ativos: detectados automaticamente · Perdidos: confirmados manualmente</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="display:flex;border:1px solid var(--border);border-radius:20px;overflow:hidden;font-size:.72rem">
+          <button id="sqlBtnCurrent" onclick="setSqlView('current')" style="padding:4px 12px;border:none;cursor:pointer;background:var(--accent);color:#fff;font-weight:600">Mês Atual</button>
+          <button id="sqlBtnPrev" onclick="setSqlView('prev')" style="padding:4px 12px;border:none;cursor:pointer;background:transparent;color:var(--sub)">Mês Anterior</button>
+        </div>
+        <div id="sqlMonthCount" style="font-size:.75rem;font-weight:600;color:var(--accent)">1 SQL</div>
+      </div>
+    </div>
+    <div id="sqlMonthWrap" style="padding-top:4px"><div style="overflow-x:auto"><table class="sql-table"><thead><tr><th>Negócio</th><th>Responsável</th><th style="text-align:center">Status</th></tr></thead><tbody><tr><td class="col-titulo" title="PREFEIRURA DE SÃO LUÍS - Felipe Falcão">PREFEIRURA DE SÃO LUÍS - Felipe Falcão</td><td class="col-resp">Thiago filgueiras</td><td class="col-status"><span class="sbadge sbadge-ativo">SQL</span></td></tr></tbody></table></div></div>
+  </div>
+
+  <!-- LEADS HISTORY CARD -->
+  <div class="card row3" style="margin-bottom:15px">
+    <div class="card-hdr">
+      <div>
+        <div class="card-title">Geração de Leads &amp; Conversões Originadas por Marketing · Visão "Safrada" por data geradora · Todos os Períodos</div>
+        <div class="card-sub">Fontes: Instagram · Meta Ads · Apollo · Event · Google · Website — Leads gerados, negócios fechados e taxa de conversão mensal</div>
+      </div>
+      <div id="leadsHistoryCount" style="font-size:.75rem;font-weight:600;color:var(--accent);text-align:right;line-height:1.5"><div style="font-size:1.6rem;font-weight:700;color:var(--accent);line-height:1">2%</div><div style="font-size:.7rem;color:var(--sub);margin-top:2px">conv. marketing</div><div style="font-size:.7rem;color:var(--sub)">754 leads · 16 fechados</div></div>
+    </div>
+    <div id="leadsHistoryWrap" style="padding-top:8px"><div style="overflow-x:auto"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 702 266" style="width:100%;min-width:600px;height:auto;overflow:visible"><rect x="37" y="2" width="151" height="22" rx="3" fill="#f5f2ee" stroke="#c8bdb1" stroke-width="0.5"></rect><text x="112.5" y="17" text-anchor="middle" font-size="8.5" font-weight="600" fill="#78685a" letter-spacing="0.3">SPOT · conv. 5%</text><line x1="189" y1="2" x2="189" y2="24" stroke="#c8bdb1" stroke-width="1" stroke-dasharray="3,2"></line><rect x="190" y="2" width="151" height="22" rx="3" fill="#eef1f6" stroke="#b8c4d4" stroke-width="0.5"></rect><text x="265.5" y="17" text-anchor="middle" font-size="8.5" font-weight="600" fill="#4a5568" letter-spacing="0.3">BLUE OCEAN · conv. 0%</text><line x1="342" y1="2" x2="342" y2="24" stroke="#b8c4d4" stroke-width="1" stroke-dasharray="3,2"></line><rect x="343" y="2" width="355" height="22" rx="3" fill="#eef4f1" stroke="#b0ccbf" stroke-width="0.5"></rect><text x="520.5" y="17" text-anchor="middle" font-size="8.5" font-weight="600" fill="#4a6359" letter-spacing="0.3">B-YOUNG · conv. 2%</text><line x1="36" y1="28" x2="702" y2="28" stroke="var(--border)" stroke-width="1"></line><line x1="36" y1="238" x2="702" y2="238" stroke="var(--border)" stroke-width="1"></line><text x="32" y="242" text-anchor="end" font-size="9" fill="var(--sub)">0</text><line x1="36" y1="193" x2="702" y2="193" stroke="var(--border)" stroke-width="1"></line><text x="32" y="197" text-anchor="end" font-size="9" fill="var(--sub)">29</text><line x1="36" y1="148" x2="702" y2="148" stroke="var(--border)" stroke-width="1"></line><text x="32" y="152" text-anchor="end" font-size="9" fill="var(--sub)">58</text><line x1="36" y1="103" x2="702" y2="103" stroke="var(--border)" stroke-width="1"></line><text x="32" y="107" text-anchor="end" font-size="9" fill="var(--sub)">87</text><line x1="36" y1="58" x2="702" y2="58" stroke="var(--border)" stroke-width="1"></line><text x="32" y="62" text-anchor="end" font-size="9" fill="var(--sub)">116</text><polyline points="112,231 163,234 214,238 265,238 316,238 367,236 418,229 469,231 520,231 571,238 622,238 673,238" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linejoin="round"></polyline><rect x="63" y="235" width="16" height="3" rx="2" fill="#22c55e"></rect><text x="71" y="232" text-anchor="middle" font-size="8" font-weight="600" fill="#15803d">2</text><text x="61" y="260" text-anchor="middle" font-size="9" fill="var(--sub)">jul. de 25</text><rect x="94" y="63" width="16" height="175" rx="2" fill="#60a5fa"></rect><text x="102" y="60" text-anchor="middle" font-size="8" font-weight="600" fill="#2563eb">113</text><rect x="114" y="230" width="16" height="8" rx="2" fill="#22c55e"></rect><text x="122" y="227" text-anchor="middle" font-size="8" font-weight="600" fill="#15803d">5</text><text x="112" y="260" text-anchor="middle" font-size="9" fill="var(--sub)">ago. de 25</text><circle cx="112" cy="231" r="3" fill="#f59e0b"></circle><text x="112" y="225" text-anchor="middle" font-size="8" fill="#92400e">4%</text><rect x="145" y="148" width="16" height="90" rx="2" fill="#60a5fa"></rect><text x="153" y="145" text-anchor="middle" font-size="8" font-weight="600" fill="#2563eb">58</text><rect x="165" y="236" width="16" height="2" rx="2" fill="#22c55e"></rect><text x="173" y="233" text-anchor="middle" font-size="8" font-weight="600" fill="#15803d">1</text><text x="163" y="260" text-anchor="middle" font-size="9" fill="var(--sub)">set. de 25</text><circle cx="163" cy="234" r="3" fill="#f59e0b"></circle><text x="163" y="228" text-anchor="middle" font-size="8" fill="#92400e">2%</text><rect x="196" y="185" width="16" height="53" rx="2" fill="#60a5fa"></rect><text x="204" y="182" text-anchor="middle" font-size="8" font-weight="600" fill="#2563eb">34</text><text x="214" y="260" text-anchor="middle" font-size="9" fill="var(--sub)">out. de 25</text><circle cx="214" cy="238" r="3" fill="#f59e0b"></circle><text x="214" y="232" text-anchor="middle" font-size="8" fill="#92400e">0%</text><rect x="247" y="151" width="16" height="87" rx="2" fill="#60a5fa"></rect><text x="255" y="148" text-anchor="middle" font-size="8" font-weight="600" fill="#2563eb">56</text><text x="265" y="260" text-anchor="middle" font-size="9" fill="var(--sub)">nov. de 25</text><circle cx="265" cy="238" r="3" fill="#f59e0b"></circle><text x="265" y="232" text-anchor="middle" font-size="8" fill="#92400e">0%</text><rect x="298" y="100" width="16" height="138" rx="2" fill="#60a5fa"></rect><text x="306" y="97" text-anchor="middle" font-size="8" font-weight="600" fill="#2563eb">89</text><text x="316" y="260" text-anchor="middle" font-size="9" fill="var(--sub)">dez. de 25</text><circle cx="316" cy="238" r="3" fill="#f59e0b"></circle><text x="316" y="232" text-anchor="middle" font-size="8" fill="#92400e">0%</text><rect x="349" y="120" width="16" height="118" rx="2" fill="#60a5fa"></rect><text x="357" y="117" text-anchor="middle" font-size="8" font-weight="600" fill="#2563eb">76</text><rect x="369" y="236" width="16" height="2" rx="2" fill="#22c55e"></rect><text x="377" y="233" text-anchor="middle" font-size="8" font-weight="600" fill="#15803d">1</text><text x="367" y="260" text-anchor="middle" font-size="9" fill="var(--sub)">jan. de 26</text><circle cx="367" cy="236" r="3" fill="#f59e0b"></circle><text x="367" y="230" text-anchor="middle" font-size="8" fill="#92400e">1%</text><rect x="400" y="153" width="16" height="85" rx="2" fill="#60a5fa"></rect><text x="408" y="150" text-anchor="middle" font-size="8" font-weight="600" fill="#2563eb">55</text><rect x="420" y="233" width="16" height="5" rx="2" fill="#22c55e"></rect><text x="428" y="230" text-anchor="middle" font-size="8" font-weight="600" fill="#15803d">3</text><text x="418" y="260" text-anchor="middle" font-size="9" fill="var(--sub)">fev. de 26</text><circle cx="418" cy="229" r="3" fill="#f59e0b"></circle><text x="418" y="223" text-anchor="middle" font-size="8" fill="#92400e">5%</text><rect x="451" y="164" width="16" height="74" rx="2" fill="#60a5fa"></rect><text x="459" y="161" text-anchor="middle" font-size="8" font-weight="600" fill="#2563eb">48</text><rect x="471" y="235" width="16" height="3" rx="2" fill="#22c55e"></rect><text x="479" y="232" text-anchor="middle" font-size="8" font-weight="600" fill="#15803d">2</text><text x="469" y="260" text-anchor="middle" font-size="9" fill="var(--sub)">mar. de 26</text><circle cx="469" cy="231" r="3" fill="#f59e0b"></circle><text x="469" y="225" text-anchor="middle" font-size="8" fill="#92400e">4%</text><rect x="502" y="164" width="16" height="74" rx="2" fill="#60a5fa"></rect><text x="510" y="161" text-anchor="middle" font-size="8" font-weight="600" fill="#2563eb">48</text><rect x="522" y="235" width="16" height="3" rx="2" fill="#22c55e"></rect><text x="530" y="232" text-anchor="middle" font-size="8" font-weight="600" fill="#15803d">2</text><text x="520" y="260" text-anchor="middle" font-size="9" fill="var(--sub)">abr. de 26</text><circle cx="520" cy="231" r="3" fill="#f59e0b"></circle><text x="520" y="225" text-anchor="middle" font-size="8" fill="#92400e">4%</text><rect x="553" y="126" width="16" height="112" rx="2" fill="#60a5fa"></rect><text x="561" y="123" text-anchor="middle" font-size="8" font-weight="600" fill="#2563eb">72</text><text x="571" y="260" text-anchor="middle" font-size="9" fill="var(--sub)">mai. de 26</text><circle cx="571" cy="238" r="3" fill="#f59e0b"></circle><text x="571" y="232" text-anchor="middle" font-size="8" fill="#92400e">0%</text><rect x="604" y="122" width="16" height="116" rx="2" fill="#60a5fa"></rect><text x="612" y="119" text-anchor="middle" font-size="8" font-weight="600" fill="#2563eb">75</text><text x="622" y="260" text-anchor="middle" font-size="9" fill="var(--sub)">jun. de 26</text><circle cx="622" cy="238" r="3" fill="#f59e0b"></circle><text x="622" y="232" text-anchor="middle" font-size="8" fill="#92400e">0%</text><rect x="655" y="191" width="16" height="47" rx="2" fill="#60a5fa"></rect><text x="663" y="188" text-anchor="middle" font-size="8" font-weight="600" fill="#2563eb">30</text><text x="673" y="260" text-anchor="middle" font-size="9" fill="var(--sub)">jul. de 26</text><circle cx="673" cy="238" r="3" fill="#f59e0b"></circle><text x="673" y="232" text-anchor="middle" font-size="8" fill="#92400e">0%</text></svg></div><div style="display:flex;gap:16px;justify-content:flex-end;margin-top:6px"><span style="display:flex;align-items:center;gap:4px;font-size:.72rem;color:var(--sub)"><svg width="10" height="10"><rect width="10" height="10" rx="2" fill="#60a5fa"></rect></svg>Leads gerados</span><span style="display:flex;align-items:center;gap:4px;font-size:.72rem;color:var(--sub)"><svg width="10" height="10"><rect width="10" height="10" rx="2" fill="#22c55e"></rect></svg>Fechados (por data do lead)</span><span style="display:flex;align-items:center;gap:4px;font-size:.72rem;color:var(--sub)"><svg width="12" height="4" style="overflow:visible"><line x1="0" y1="2" x2="12" y2="2" stroke="#f59e0b" stroke-width="2"></line></svg>Conv.%</span></div></div>
+  </div>
+
+  <!-- PERFORMANCE POR VENDEDOR -->
+  <div class="card row3">
+    <div class="card-hdr">
+      <div>
+        <div class="card-title">Performance por Vendedor</div>
+        <div class="card-sub">Pipeline ativo por etapa · Fechados e valor ganho = período selecionado</div>
+      </div>
+    </div>
+    <div class="src-table-wrap">
+      <div id="vendorPerfWrap"><table class="src-table"><thead><tr>
+    <th style="text-align:left">Vendedor</th>
+    <th><span class="stage-pill pill-lead">Lead</span></th>
+    <th><span class="stage-pill pill-mql">MQL</span></th>
+    <th><span class="stage-pill pill-sql">SQL</span></th>
+    <th><span class="stage-pill pill-opp">Oport.</span></th>
+    <th><span class="stage-pill pill-won">Fechados</span></th>
+    <th>Pipeline R$</th>
+    <th>Ganho R$</th>
+    <th>Conv%</th>
+  </tr></thead><tbody><tr>
+      <td style="text-align:left">
+        <div style="display:flex;align-items:center">
+          <span class="rank r1">1</span>
+          <div style="display:flex;flex-direction:column">
+            Thiago filgueiras
+            <div class="src-mini-bar"><div class="src-mini-fill" style="width:0%"></div></div>
+          </div>
+        </div>
+      </td>
+      <td>—</td>
+      <td>—</td>
+      <td>1</td>
+      <td>—</td>
+      <td><strong>—</strong></td>
+      <td>R$ 0</td>
+      <td><strong>R$ 0</strong></td>
+      <td>0%</td>
+    </tr><tr>
+      <td style="text-align:left">
+        <div style="display:flex;align-items:center">
+          <span class="rank r2">2</span>
+          <div style="display:flex;flex-direction:column">
+            Nicoli  Silva 
+            <div class="src-mini-bar"><div class="src-mini-fill" style="width:0%"></div></div>
+          </div>
+        </div>
+      </td>
+      <td>16</td>
+      <td>—</td>
+      <td>—</td>
+      <td>—</td>
+      <td><strong>—</strong></td>
+      <td>R$ 0</td>
+      <td><strong>R$ 0</strong></td>
+      <td>0%</td>
+    </tr><tr>
+    <td style="text-align:left"><strong>Total</strong></td>
+    <td><strong>16</strong></td>
+    <td><strong>—</strong></td>
+    <td><strong>1</strong></td>
+    <td><strong>—</strong></td>
+    <td><strong>—</strong></td>
+    <td><strong>R$ 0</strong></td>
+    <td><strong>R$ 0</strong></td>
+    <td><strong>0%</strong></td>
+  </tr></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- NEGÓCIOS CONVERTIDOS -->
+  <div class="card row3">
+    <div class="card-hdr" style="flex-wrap:wrap;gap:10px">
+      <div>
+        <div class="card-title">Negócios Convertidos</div>
+        <div class="card-sub" id="convertedCount">Fechamentos no período selecionado</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-left:auto">
+        <!-- Busca -->
+        <input type="text" id="cvSearch" placeholder="🔍 Buscar negócio ou vendedor..." oninput="renderConvertedDeals()" style="padding:5px 10px;border:1px solid var(--border);border-radius:20px;font-size:.77rem;width:200px;outline:none">
+        <!-- Segmentos pendentes -->
+        <button id="btnSegEditor" onclick="openSegmentoEditor()" title="Preencher segmentos manualmente" style="padding: 5px 12px; border: 1px solid rgb(245, 158, 11); border-radius: 20px; font-size: 0.75rem; background: rgb(255, 251, 235); color: rgb(146, 64, 14); cursor: pointer; font-weight: 600; display: inline-block;">
+          ✏️ Segmentos (<span id="segPendCount">34</span>)
+        </button>
+        <!-- Agrupamento -->
+        <div style="display:flex;border:1px solid var(--border);border-radius:20px;overflow:hidden">
+          <button id="cvGrp_list" class="cv-grp active" onclick="setCvGroup('list',this)" title="Lista">≡ Lista</button>
+          <button id="cvGrp_inicio" class="cv-grp" onclick="setCvGroup('inicio',this)" title="Agrupar por mês de início">📅 Início</button>
+          <button id="cvGrp_conv" class="cv-grp" onclick="setCvGroup('conv',this)" title="Agrupar por mês de conversão">📅 Conversão</button>
+        </div>
+        <!-- Ordenação (só visível na lista) -->
+        <select id="cvSort" onchange="renderConvertedDeals()" style="padding:5px 10px;border:1px solid var(--border);border-radius:20px;font-size:.77rem;background:#fff;cursor:pointer;outline:none">
+          <option value="value">↓ Maior valor</option>
+          <option value="date_conv">↓ Mais recente (conversão)</option>
+          <option value="date_init">↓ Mais recente (início)</option>
+          <option value="cycle_desc">↓ Maior ciclo</option>
+          <option value="cycle_asc">↑ Menor ciclo</option>
+        </select>
+      </div>
+    </div>
+    <div class="src-table-wrap">
+      <div id="convertedWrap"><div class="empty"><div class="empty-icon">🏆</div>Sem negócios fechados no período selecionado.</div></div>
+    </div>
+  </div>
+
+  <!-- RECONCILIATION CARD -->
+  <div class="card row3" style="margin-top:15px">
+    <div class="card-hdr">
+      <div>
+        <div class="card-title">Reconciliação Leads &amp; Negócios · Todos os Períodos</div>
+        <div class="card-sub">Leads e deals por data de origem (lead vinculado) · pipeline Brasil · mesmo critério de LeadsHistory</div>
+      </div>
+    </div>
+    <div id="reconcileWrap" style="padding-top:8px"><div style="overflow-x:auto;max-height:400px;overflow-y:auto"><table style="width:100%;border-collapse:collapse;font-size:.8rem"><thead style="position:sticky;top:0;background:var(--card,var(--bg));z-index:1"><tr><th style="padding:6px 10px;font-size:.72rem;font-weight:600;color:var(--sub);text-align:left;border-bottom:2px solid var(--border)">Mês</th><th style="padding:6px 10px;font-size:.72rem;font-weight:600;color:var(--sub);text-align:right;white-space:nowrap;border-bottom:2px solid var(--border)">Leads</th><th style="padding:6px 10px;font-size:.72rem;font-weight:600;color:var(--sub);text-align:right;white-space:nowrap;border-bottom:2px solid var(--border)">Deals criados</th><th style="padding:6px 10px;font-size:.72rem;font-weight:600;color:var(--sub);text-align:right;white-space:nowrap;border-bottom:2px solid var(--border)" title="Ainda ativos no pipeline">Ativos</th><th style="padding:6px 10px;font-size:.72rem;font-weight:600;color:var(--sub);text-align:right;white-space:nowrap;border-bottom:2px solid var(--border)" title="Marcados como perdidos">Perdidos</th><th style="padding:6px 10px;font-size:.72rem;font-weight:600;color:var(--sub);text-align:right;white-space:nowrap;border-bottom:2px solid var(--border)" title="Negócios ganhos">Fechados</th><th style="padding:6px 10px;font-size:.72rem;font-weight:600;color:var(--sub);text-align:right;white-space:nowrap;border-bottom:2px solid var(--border)">Conv. %</th></tr></thead><tbody><tr style=""><td style="padding:6px 10px;color:var(--sub);white-space:nowrap">jul. de 2026</td><td style="padding:6px 10px;text-align:right;font-weight:600;color:#2563eb">30</td><td style="padding:6px 10px;text-align:right;color:var(--sub)">0</td><td style="padding:6px 10px;text-align:right;color:#64748b">0</td><td style="padding:6px 10px;text-align:right;color:#ef4444">0</td><td style="padding:6px 10px;text-align:right;color:#16a34a;font-weight:600">0</td><td style="padding:6px 10px;text-align:right;font-weight:700;color:var(--sub)">0%</td></tr><tr style="background:var(--bg2,rgba(0,0,0,.02))"><td style="padding:6px 10px;color:var(--sub);white-space:nowrap">jun. de 2026</td><td style="padding:6px 10px;text-align:right;font-weight:600;color:#2563eb">75</td><td style="padding:6px 10px;text-align:right;color:var(--sub)">18</td><td style="padding:6px 10px;text-align:right;color:#64748b">9</td><td style="padding:6px 10px;text-align:right;color:#ef4444">9</td><td style="padding:6px 10px;text-align:right;color:#16a34a;font-weight:600">0</td><td style="padding:6px 10px;text-align:right;font-weight:700;color:var(--sub)">0%</td></tr><tr style=""><td style="padding:6px 10px;color:var(--sub);white-space:nowrap">mai. de 2026</td><td style="padding:6px 10px;text-align:right;font-weight:600;color:#2563eb">72</td><td style="padding:6px 10px;text-align:right;color:var(--sub)">21</td><td style="padding:6px 10px;text-align:right;color:#64748b">12</td><td style="padding:6px 10px;text-align:right;color:#ef4444">8</td><td style="padding:6px 10px;text-align:right;color:#16a34a;font-weight:600">1</td><td style="padding:6px 10px;text-align:right;font-weight:700;color:#dc2626">1%</td></tr><tr style="background:var(--bg2,rgba(0,0,0,.02))"><td style="padding:6px 10px;color:var(--sub);white-space:nowrap">abr. de 2026</td><td style="padding:6px 10px;text-align:right;font-weight:600;color:#2563eb">48</td><td style="padding:6px 10px;text-align:right;color:var(--sub)">19</td><td style="padding:6px 10px;text-align:right;color:#64748b">8</td><td style="padding:6px 10px;text-align:right;color:#ef4444">5</td><td style="padding:6px 10px;text-align:right;color:#16a34a;font-weight:600">6</td><td style="padding:6px 10px;text-align:right;font-weight:700;color:#b45309">13%</td></tr><tr style=""><td style="padding:6px 10px;color:var(--sub);white-space:nowrap">mar. de 2026</td><td style="padding:6px 10px;text-align:right;font-weight:600;color:#2563eb">48</td><td style="padding:6px 10px;text-align:right;color:var(--sub)">16</td><td style="padding:6px 10px;text-align:right;color:#64748b">9</td><td style="padding:6px 10px;text-align:right;color:#ef4444">4</td><td style="padding:6px 10px;text-align:right;color:#16a34a;font-weight:600">3</td><td style="padding:6px 10px;text-align:right;font-weight:700;color:#dc2626">6%</td></tr><tr style="background:var(--bg2,rgba(0,0,0,.02))"><td style="padding:6px 10px;color:var(--sub);white-space:nowrap">fev. de 2026</td><td style="padding:6px 10px;text-align:right;font-weight:600;color:#2563eb">60</td><td style="padding:6px 10px;text-align:right;color:var(--sub)">16</td><td style="padding:6px 10px;text-align:right;color:#64748b">5</td><td style="padding:6px 10px;text-align:right;color:#ef4444">8</td><td style="padding:6px 10px;text-align:right;color:#16a34a;font-weight:600">3</td><td style="padding:6px 10px;text-align:right;font-weight:700;color:#dc2626">5%</td></tr><tr style=""><td style="padding:6px 10px;color:var(--sub);white-space:nowrap">jan. de 2026</td><td style="padding:6px 10px;text-align:right;font-weight:600;color:#2563eb">76</td><td style="padding:6px 10px;text-align:right;color:var(--sub)">21</td><td style="padding:6px 10px;text-align:right;color:#64748b">3</td><td style="padding:6px 10px;text-align:right;color:#ef4444">13</td><td style="padding:6px 10px;text-align:right;color:#16a34a;font-weight:600">5</td><td style="padding:6px 10px;text-align:right;font-weight:700;color:#dc2626">7%</td></tr><tr style="background:var(--bg2,rgba(0,0,0,.02))"><td style="padding:6px 10px;color:var(--sub);white-space:nowrap">dez. de 2025</td><td style="padding:6px 10px;text-align:right;font-weight:600;color:#2563eb">89</td><td style="padding:6px 10px;text-align:right;color:var(--sub)">7</td><td style="padding:6px 10px;text-align:right;color:#64748b">1</td><td style="padding:6px 10px;text-align:right;color:#ef4444">5</td><td style="padding:6px 10px;text-align:right;color:#16a34a;font-weight:600">1</td><td style="padding:6px 10px;text-align:right;font-weight:700;color:#dc2626">1%</td></tr><tr style=""><td style="padding:6px 10px;color:var(--sub);white-space:nowrap">nov. de 2025</td><td style="padding:6px 10px;text-align:right;font-weight:600;color:#2563eb">56</td><td style="padding:6px 10px;text-align:right;color:var(--sub)">8</td><td style="padding:6px 10px;text-align:right;color:#64748b">1</td><td style="padding:6px 10px;text-align:right;color:#ef4444">6</td><td style="padding:6px 10px;text-align:right;color:#16a34a;font-weight:600">1</td><td style="padding:6px 10px;text-align:right;font-weight:700;color:#dc2626">2%</td></tr><tr style="background:var(--bg2,rgba(0,0,0,.02))"><td style="padding:6px 10px;color:var(--sub);white-space:nowrap">out. de 2025</td><td style="padding:6px 10px;text-align:right;font-weight:600;color:#2563eb">34</td><td style="padding:6px 10px;text-align:right;color:var(--sub)">6</td><td style="padding:6px 10px;text-align:right;color:#64748b">0</td><td style="padding:6px 10px;text-align:right;color:#ef4444">4</td><td style="padding:6px 10px;text-align:right;color:#16a34a;font-weight:600">2</td><td style="padding:6px 10px;text-align:right;font-weight:700;color:#dc2626">6%</td></tr><tr style=""><td style="padding:6px 10px;color:var(--sub);white-space:nowrap">set. de 2025</td><td style="padding:6px 10px;text-align:right;font-weight:600;color:#2563eb">58</td><td style="padding:6px 10px;text-align:right;color:var(--sub)">9</td><td style="padding:6px 10px;text-align:right;color:#64748b">1</td><td style="padding:6px 10px;text-align:right;color:#ef4444">7</td><td style="padding:6px 10px;text-align:right;color:#16a34a;font-weight:600">1</td><td style="padding:6px 10px;text-align:right;font-weight:700;color:#dc2626">2%</td></tr><tr style="background:var(--bg2,rgba(0,0,0,.02))"><td style="padding:6px 10px;color:var(--sub);white-space:nowrap">ago. de 2025</td><td style="padding:6px 10px;text-align:right;font-weight:600;color:#2563eb">113</td><td style="padding:6px 10px;text-align:right;color:var(--sub)">256</td><td style="padding:6px 10px;text-align:right;color:#64748b">4</td><td style="padding:6px 10px;text-align:right;color:#ef4444">246</td><td style="padding:6px 10px;text-align:right;color:#16a34a;font-weight:600">6</td><td style="padding:6px 10px;text-align:right;font-weight:700;color:#dc2626">5%</td></tr><tr style=""><td style="padding:6px 10px;color:var(--sub);white-space:nowrap">jul. de 2025</td><td style="padding:6px 10px;text-align:right;font-weight:600;color:#2563eb">0</td><td style="padding:6px 10px;text-align:right;color:var(--sub)">61</td><td style="padding:6px 10px;text-align:right;color:#64748b">5</td><td style="padding:6px 10px;text-align:right;color:#ef4444">51</td><td style="padding:6px 10px;text-align:right;color:#16a34a;font-weight:600">5</td><td style="padding:6px 10px;text-align:right;font-weight:700;color:var(--sub)">0%</td></tr><tr style="border-top:2px solid var(--border);position:sticky;bottom:0;background:var(--card,var(--bg))"><td style="padding:7px 10px;font-weight:700;color:var(--text)">Total</td><td style="padding:7px 10px;text-align:right;font-weight:700;color:#2563eb">759</td><td style="padding:7px 10px;text-align:right;font-weight:700;color:var(--text)">458</td><td style="padding:7px 10px;text-align:right;font-weight:700;color:#64748b">58</td><td style="padding:7px 10px;text-align:right;font-weight:700;color:#ef4444">366</td><td style="padding:7px 10px;text-align:right;font-weight:700;color:#16a34a">34</td><td style="padding:7px 10px;text-align:right;font-weight:700;color:#dc2626">4%</td></tr></tbody></table></div></div>
+  </div>
+
+</div>
+
+
+<!-- Modal Segmento Manual -->
+</body></html>
